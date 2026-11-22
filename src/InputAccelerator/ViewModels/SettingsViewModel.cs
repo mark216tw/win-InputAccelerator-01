@@ -19,6 +19,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private bool _savedOverlayEnabled;
     private bool _savedAutoEnterAfterSelection;
     private bool _savedAutoExpandEnabled;
+    private FloatingCollapseCorner _savedCollapseCorner;
 
     public SettingsViewModel(
         SettingsService settings,
@@ -44,6 +45,9 @@ public sealed partial class SettingsViewModel : ObservableObject
     public partial int FloatingAutoCollapseIndex { get; set; }
 
     [ObservableProperty]
+    public partial int FloatingCollapseCornerIndex { get; set; }
+
+    [ObservableProperty]
     public partial bool IsOverlayEnabled { get; set; }
 
     [ObservableProperty]
@@ -59,6 +63,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         GetTheme() != _savedTheme ||
         GetBackgroundIndex() != _savedBackgroundIndex ||
         GetAutoCollapseSeconds() != _savedAutoCollapseSeconds ||
+        GetCollapseCorner() != _savedCollapseCorner ||
         IsOverlayEnabled != _savedOverlayEnabled ||
         AutoEnterAfterSelection != _savedAutoEnterAfterSelection ||
         FloatingAutoExpandEnabled != _savedAutoExpandEnabled;
@@ -84,6 +89,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             SelectedBackgroundOption = BackgroundOptions.FirstOrDefault(
                 option => option.Index == settings.FloatingBackgroundIndex) ?? BackgroundOptions[0];
             FloatingAutoCollapseIndex = FloatingAutoCollapsePresets.GetIndex(settings.FloatingAutoCollapseSeconds);
+            FloatingCollapseCornerIndex = FloatingCollapseCornerPresets.GetIndex(settings.FloatingCollapseCorner);
             IsOverlayEnabled = settings.IsOverlayEnabled;
             AutoEnterAfterSelection = settings.AutoEnterAfterSelection;
             FloatingAutoExpandEnabled = settings.FloatingAutoExpandEnabled;
@@ -92,6 +98,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             _savedTheme = settings.Theme;
             _savedBackgroundIndex = settings.FloatingBackgroundIndex;
             _savedAutoCollapseSeconds = settings.FloatingAutoCollapseSeconds;
+            _savedCollapseCorner = settings.FloatingCollapseCorner;
             _savedOverlayEnabled = settings.IsOverlayEnabled;
             _savedAutoEnterAfterSelection = settings.AutoEnterAfterSelection;
             _savedAutoExpandEnabled = settings.FloatingAutoExpandEnabled;
@@ -115,6 +122,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         var theme = GetTheme();
         var backgroundIndex = GetBackgroundIndex();
         var autoCollapseSeconds = GetAutoCollapseSeconds();
+        var collapseCorner = GetCollapseCorner();
         var isOverlayEnabled = IsOverlayEnabled;
         var autoEnterAfterSelection = AutoEnterAfterSelection;
         var autoExpandEnabled = FloatingAutoExpandEnabled;
@@ -123,6 +131,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _settings.Current.Theme = theme;
         _settings.Current.FloatingBackgroundIndex = backgroundIndex;
         _settings.Current.FloatingAutoCollapseSeconds = autoCollapseSeconds;
+        _settings.Current.FloatingCollapseCorner = collapseCorner;
         _settings.Current.IsOverlayEnabled = isOverlayEnabled;
         _settings.Current.AutoEnterAfterSelection = autoEnterAfterSelection;
         _settings.Current.FloatingAutoExpandEnabled = autoExpandEnabled;
@@ -138,6 +147,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             _settings.Current.Theme = _savedTheme;
             _settings.Current.FloatingBackgroundIndex = _savedBackgroundIndex;
             _settings.Current.FloatingAutoCollapseSeconds = _savedAutoCollapseSeconds;
+            _settings.Current.FloatingCollapseCorner = _savedCollapseCorner;
             _settings.Current.IsOverlayEnabled = _savedOverlayEnabled;
             _settings.Current.AutoEnterAfterSelection = _savedAutoEnterAfterSelection;
             _settings.Current.FloatingAutoExpandEnabled = _savedAutoExpandEnabled;
@@ -150,6 +160,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _savedTheme = theme;
         _savedBackgroundIndex = backgroundIndex;
         _savedAutoCollapseSeconds = autoCollapseSeconds;
+        _savedCollapseCorner = collapseCorner;
         _savedOverlayEnabled = isOverlayEnabled;
         _savedAutoEnterAfterSelection = autoEnterAfterSelection;
         _savedAutoExpandEnabled = autoExpandEnabled;
@@ -173,6 +184,11 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     partial void OnFloatingAutoCollapseIndexChanged(int value)
+    {
+        NotifyUnsavedChanges();
+    }
+
+    partial void OnFloatingCollapseCornerIndexChanged(int value)
     {
         NotifyUnsavedChanges();
     }
@@ -223,5 +239,10 @@ public sealed partial class SettingsViewModel : ObservableObject
     private int GetAutoCollapseSeconds()
     {
         return FloatingAutoCollapsePresets.GetSeconds(FloatingAutoCollapseIndex);
+    }
+
+    private FloatingCollapseCorner GetCollapseCorner()
+    {
+        return FloatingCollapseCornerPresets.GetCorner(FloatingCollapseCornerIndex);
     }
 }

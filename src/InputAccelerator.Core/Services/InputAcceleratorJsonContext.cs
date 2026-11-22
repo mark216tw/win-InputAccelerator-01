@@ -23,6 +23,7 @@ internal sealed partial class InputAcceleratorJsonContext : JsonSerializerContex
         {
             new JsonStringEnumConverter<InputMode>(JsonNamingPolicy.CamelCase),
             new JsonStringEnumConverter<AppTheme>(JsonNamingPolicy.CamelCase),
+            new JsonStringEnumConverter<FloatingCollapseCorner>(JsonNamingPolicy.CamelCase),
         },
     });
 

@@ -173,6 +173,27 @@
   <data name="FloatingAutoCollapse1Minute.Content" xml:space="preserve">
     <value>1 分鐘</value>
   </data>
+  <data name="FloatingCollapseCornerLabel.Text" xml:space="preserve">
+    <value>浮動視窗縮小方向</value>
+  </data>
+  <data name="FloatingCollapseCornerCombo.AutomationProperties.Name" xml:space="preserve">
+    <value>浮動視窗縮小方向</value>
+  </data>
+  <data name="FloatingCollapseCornerHint.Text" xml:space="preserve">
+    <value>縮小時會收合到展開視窗的指定角落。</value>
+  </data>
+  <data name="FloatingCollapseCornerTopRight.Content" xml:space="preserve">
+    <value>右上</value>
+  </data>
+  <data name="FloatingCollapseCornerBottomRight.Content" xml:space="preserve">
+    <value>右下</value>
+  </data>
+  <data name="FloatingCollapseCornerTopLeft.Content" xml:space="preserve">
+    <value>左上</value>
+  </data>
+  <data name="FloatingCollapseCornerBottomLeft.Content" xml:space="preserve">
+    <value>左下</value>
+  </data>
   <data name="FloatingAutoExpandToggle.Header" xml:space="preserve">
     <value>浮動視窗自動展開</value>
   </data>

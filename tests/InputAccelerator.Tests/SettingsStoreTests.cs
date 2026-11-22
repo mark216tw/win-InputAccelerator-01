@@ -29,6 +29,7 @@ public sealed class SettingsStoreTests : IDisposable
             Theme = AppTheme.Dark,
             FloatingBackgroundIndex = 5,
             FloatingAutoCollapseSeconds = 60,
+            FloatingCollapseCorner = FloatingCollapseCorner.BottomLeft,
             FloatingWindowPlacement = new WindowPlacement { X = 100, Y = 200, Width = 240, Height = 360 },
             MainWindowPlacement = new WindowPlacement { X = 60, Y = 80, Width = 900, Height = 700 },
             MainWindowMaximized = true,
@@ -43,6 +44,7 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(AppTheme.Dark, loaded.Theme);
         Assert.Equal(5, loaded.FloatingBackgroundIndex);
         Assert.Equal(60, loaded.FloatingAutoCollapseSeconds);
+        Assert.Equal(FloatingCollapseCorner.BottomLeft, loaded.FloatingCollapseCorner);
         Assert.NotNull(loaded.FloatingWindowPlacement);
         Assert.Equal(100, loaded.FloatingWindowPlacement!.X);
         Assert.Equal(360, loaded.FloatingWindowPlacement.Height);
@@ -50,7 +52,9 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(60, loaded.MainWindowPlacement!.X);
         Assert.Equal(900, loaded.MainWindowPlacement.Width);
         Assert.True(loaded.MainWindowMaximized);
-        Assert.Contains("\"clipboardPaste\"", await File.ReadAllTextAsync(path), StringComparison.Ordinal);
+        var json = await File.ReadAllTextAsync(path);
+        Assert.Contains("\"clipboardPaste\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"bottomLeft\"", json, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -88,6 +92,7 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(AppTheme.System, loaded.Theme);
         Assert.Equal(FloatingBackgroundPresets.FollowSystemIndex, loaded.FloatingBackgroundIndex);
         Assert.Equal(FloatingAutoCollapsePresets.DefaultSeconds, loaded.FloatingAutoCollapseSeconds);
+        Assert.Equal(FloatingCollapseCornerPresets.DefaultCorner, loaded.FloatingCollapseCorner);
         Assert.Null(loaded.FloatingWindowPlacement);
     }
 
@@ -102,7 +107,8 @@ public sealed class SettingsStoreTests : IDisposable
               "isOverlayEnabled": true,
               "inputMode": "simulatedInput",
               "theme": "unknown",
-              "floatingBackgroundIndex": 99
+              "floatingBackgroundIndex": 99,
+              "floatingCollapseCorner": 99
             }
             """);
         var store = new SettingsStore(path);
@@ -112,6 +118,7 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(AppTheme.System, loaded.Theme);
         Assert.Equal(FloatingBackgroundPresets.FollowSystemIndex, loaded.FloatingBackgroundIndex);
         Assert.Equal(FloatingAutoCollapsePresets.DefaultSeconds, loaded.FloatingAutoCollapseSeconds);
+        Assert.Equal(FloatingCollapseCornerPresets.DefaultCorner, loaded.FloatingCollapseCorner);
     }
 
     [Theory]

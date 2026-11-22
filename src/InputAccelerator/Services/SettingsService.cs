@@ -77,6 +77,7 @@ public sealed class SettingsService
             FloatingBackgroundIndex = source.FloatingBackgroundIndex,
             FloatingAutoCollapseSeconds = source.FloatingAutoCollapseSeconds,
             FloatingAutoExpandEnabled = source.FloatingAutoExpandEnabled,
+            FloatingCollapseCorner = source.FloatingCollapseCorner,
             FloatingWindowPlacement = source.FloatingWindowPlacement?.Clone(),
             MainWindowPlacement = source.MainWindowPlacement?.Clone(),
             MainWindowMaximized = source.MainWindowMaximized,

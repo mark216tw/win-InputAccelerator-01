@@ -127,6 +127,21 @@
                     </StackPanel>
 
                     <StackPanel Spacing="6">
+                        <TextBlock x:Uid="FloatingCollapseCornerLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <ComboBox
+                            x:Uid="FloatingCollapseCornerCombo"
+                            MinWidth="180"
+                            HorizontalAlignment="Left"
+                            SelectedIndex="{x:Bind ViewModel.FloatingCollapseCornerIndex, Mode=TwoWay}">
+                            <ComboBoxItem x:Uid="FloatingCollapseCornerTopRight" />
+                            <ComboBoxItem x:Uid="FloatingCollapseCornerBottomRight" />
+                            <ComboBoxItem x:Uid="FloatingCollapseCornerTopLeft" />
+                            <ComboBoxItem x:Uid="FloatingCollapseCornerBottomLeft" />
+                        </ComboBox>
+                        <TextBlock x:Uid="FloatingCollapseCornerHint" Style="{StaticResource HintTextStyle}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="6">
                         <ToggleSwitch
                             x:Uid="FloatingAutoExpandToggle"
                             IsOn="{x:Bind ViewModel.FloatingAutoExpandEnabled, Mode=TwoWay}" />

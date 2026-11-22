@@ -16,6 +16,8 @@ public sealed class AppSettings
 
     public bool FloatingAutoExpandEnabled { get; set; } = true;
 
+    public FloatingCollapseCorner FloatingCollapseCorner { get; set; } = FloatingCollapseCornerPresets.DefaultCorner;
+
     public WindowPlacement? FloatingWindowPlacement { get; set; }
 
     public WindowPlacement? MainWindowPlacement { get; set; }

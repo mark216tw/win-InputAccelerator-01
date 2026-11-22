@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-11-22 - v1.7.0
+
+### 目標
+新增浮動視窗縮小方向設定，讓縮小後的小區塊可貼齊展開視窗的右上、右下、左上或左下角。
+
+### 變更
+- 新增 `FloatingCollapseCorner`、`FloatingCollapseCornerPresets` 與 `FloatingCollapseLayout`，集中處理方向選項與收合座標計算。
+- `AppSettings`、`SettingsStore`、`SettingsService`、JSON 序列化內容加入縮小方向，預設右上並在載入時驗證非法值。
+- `SettingsViewModel` 與 `SettingsWindow.xaml` 新增「浮動視窗縮小方向」ComboBox 與提示文字。
+- `FloatingWindow.Collapse()` 改依設定計算收合位置；手動縮小與自動縮小共用相同邏輯。
+- 新增方向 Presets 與收合位置單元測試，並擴充設定檔往返與正規化測試。
+- 更新 README、使用指南、CHANGELOG、RELEASE_NOTES，版本提升至 1.7.0。
+
+### 問題與解法
+- 建置時既有的執行中程式鎖住 `InputAccelerator.Core.dll`，導致複製檔案重試警告；關閉或重新啟動程式後即可避免，編譯與測試仍成功。
+
+### 待辦
+- 尚未實機驗證四種縮小方向在高 DPI 與多螢幕環境下的視覺位置。
+
+---
+
 ## 2026-11-21 - v1.6.2
 
 ### 目標

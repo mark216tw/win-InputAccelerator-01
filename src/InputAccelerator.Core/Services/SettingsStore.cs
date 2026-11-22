@@ -125,6 +125,11 @@ public sealed class SettingsStore
             settings.FloatingAutoCollapseSeconds = FloatingAutoCollapsePresets.DefaultSeconds;
         }
 
+        if (!FloatingCollapseCornerPresets.IsValid(settings.FloatingCollapseCorner))
+        {
+            settings.FloatingCollapseCorner = FloatingCollapseCornerPresets.DefaultCorner;
+        }
+
         if (settings.FloatingWindowPlacement is { } placement)
         {
             if (placement.Width <= 0 || placement.Height <= 0)

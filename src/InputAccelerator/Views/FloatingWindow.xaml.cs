@@ -350,11 +350,21 @@ public sealed partial class FloatingWindow : Window
         var dpi = NativeMethods.GetDpiForWindow(_windowHandle);
         var scale = dpi == 0 ? 1.0 : dpi / 96.0;
         var collapsedSize = Math.Max(1, (int)Math.Round(CollapsedSizeDip * scale));
-        var x = _expandedPlacement.X + _expandedPlacement.Width - collapsedSize;
-        var y = _expandedPlacement.Y;
+        var collapsedBounds = FloatingCollapseLayout.Calculate(
+            _expandedPlacement,
+            collapsedSize,
+            _settings.Current.FloatingCollapseCorner);
 
-        AppWindow.MoveAndResize(new RectInt32(x, y, collapsedSize, collapsedSize));
-        _suppressHoverExpand = IsCursorInside(x, y, collapsedSize, collapsedSize);
+        AppWindow.MoveAndResize(new RectInt32(
+            collapsedBounds.X,
+            collapsedBounds.Y,
+            collapsedBounds.Width,
+            collapsedBounds.Height));
+        _suppressHoverExpand = IsCursorInside(
+            collapsedBounds.X,
+            collapsedBounds.Y,
+            collapsedBounds.Width,
+            collapsedBounds.Height);
         _interop.EnsureTopmost();
         UpdateCollapsedVisualState();
     }
