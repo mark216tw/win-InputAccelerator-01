@@ -1,9 +1,10 @@
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using InputAccelerator.Core.Models;
 using InputAccelerator.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.UI.Xaml;
 
 namespace InputAccelerator.ViewModels;
 
@@ -14,6 +15,7 @@ public sealed class FloatingBarViewModel : ObservableObject
     private readonly SettingsService _settings;
     private readonly ILogger<FloatingBarViewModel> _logger;
     private FloatingPalette? _palette;
+    private int _selectedCategory = EntryCategories.AllFilter;
 
     public FloatingBarViewModel(
         EntryListViewModel entryList,
@@ -25,20 +27,46 @@ public sealed class FloatingBarViewModel : ObservableObject
         _injectionService = injectionService;
         _settings = settings;
         _logger = logger;
-        _entryList.PropertyChanged += OnEntryListPropertyChanged;
-        _entryList.Entries.CollectionChanged += OnEntriesCollectionChanged;
-        _entryList.BatchUpdateCompleted += OnEntriesBatchUpdateCompleted;
+
+        _entryList.CategoryCountsChanged += OnCategoryCountsChanged;
+        RebuildCategoryOptions();
         RebuildItems();
     }
 
     public ObservableCollection<FloatingEntryItemViewModel> Items { get; } = [];
 
+    public ObservableCollection<FloatingCategoryOptionViewModel> CategoryOptions { get; } = [];
+
+    public bool IsCategoryFiltered => _selectedCategory != EntryCategories.AllFilter;
+
+    public Visibility CategoryBarVisibility =>
+        CategoryOptions.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+
     public bool HasEntries => Items.Count > 0;
+
+    public void SelectCategory(int filterValue)
+    {
+        var normalized = EntryCategories.NormalizeFilter(filterValue);
+        if (_selectedCategory == normalized)
+        {
+            return;
+        }
+
+        _selectedCategory = normalized;
+        UpdateCategorySelection();
+        RebuildItems();
+        OnPropertyChanged(nameof(IsCategoryFiltered));
+    }
 
     public void ApplyPalette(FloatingPalette palette)
     {
         ArgumentNullException.ThrowIfNull(palette);
         _palette = palette;
+        foreach (var option in CategoryOptions)
+        {
+            option.ApplyPalette(palette);
+        }
+
         foreach (var item in Items)
         {
             item.ApplyPalette(palette);
@@ -67,57 +95,10 @@ public sealed class FloatingBarViewModel : ObservableObject
         }
     }
 
-    private void OnEntryListPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnCategoryCountsChanged(object? sender, EventArgs e)
     {
-        if (e.PropertyName == nameof(EntryListViewModel.HasEntries))
-        {
-            OnPropertyChanged(nameof(HasEntries));
-        }
-    }
-
-    private void OnEntriesBatchUpdateCompleted(object? sender, EventArgs e)
-    {
+        RebuildCategoryOptions();
         RebuildItems();
-    }
-
-    private void OnEntriesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (_entryList.IsBatchUpdating)
-        {
-            return;
-        }
-
-        switch (e.Action)
-        {
-            case NotifyCollectionChangedAction.Add when e.NewItems is not null && e.NewStartingIndex >= 0:
-                var insertIndex = e.NewStartingIndex;
-                foreach (TextEntryViewModel entry in e.NewItems)
-                {
-                    var item = CreateItem(entry);
-                    Items.Insert(insertIndex++, item);
-                }
-
-                OnPropertyChanged(nameof(HasEntries));
-                return;
-
-            case NotifyCollectionChangedAction.Remove when e.OldItems is not null && e.OldStartingIndex >= 0:
-                for (var i = 0; i < e.OldItems.Count && e.OldStartingIndex < Items.Count; i++)
-                {
-                    Items[e.OldStartingIndex].Dispose();
-                    Items.RemoveAt(e.OldStartingIndex);
-                }
-
-                OnPropertyChanged(nameof(HasEntries));
-                return;
-
-            case NotifyCollectionChangedAction.Move when e.OldStartingIndex >= 0 && e.NewStartingIndex >= 0 && e.OldItems?.Count == 1:
-                Items.Move(e.OldStartingIndex, e.NewStartingIndex);
-                return;
-
-            default:
-                RebuildItems();
-                return;
-        }
     }
 
     private FloatingEntryItemViewModel CreateItem(TextEntryViewModel entry)
@@ -141,9 +122,62 @@ public sealed class FloatingBarViewModel : ObservableObject
         Items.Clear();
         foreach (var entry in _entryList.Entries)
         {
+            if (_selectedCategory != EntryCategories.AllFilter && entry.Category != _selectedCategory)
+            {
+                continue;
+            }
+
             Items.Add(CreateItem(entry));
         }
 
         OnPropertyChanged(nameof(HasEntries));
+    }
+
+    private void RebuildCategoryOptions()
+    {
+        CategoryOptions.Clear();
+        var autoSelectFirst = _selectedCategory == EntryCategories.AllFilter;
+        for (var category = EntryCategories.Min; category <= EntryCategories.Max; category++)
+        {
+            if (_entryList.GetCategoryCount(category) == 0)
+            {
+                continue;
+            }
+
+            var option = new FloatingCategoryOptionViewModel(
+                category,
+                category.ToString(CultureInfo.InvariantCulture));
+            if (_palette is { } palette)
+            {
+                option.ApplyPalette(palette);
+            }
+
+            CategoryOptions.Add(option);
+            if (autoSelectFirst)
+            {
+                _selectedCategory = category;
+                autoSelectFirst = false;
+            }
+        }
+
+        if (_selectedCategory != EntryCategories.AllFilter &&
+            _entryList.GetCategoryCount(_selectedCategory) == 0)
+        {
+            _selectedCategory = CategoryOptions.Count > 0
+                ? CategoryOptions[0].FilterValue
+                : EntryCategories.AllFilter;
+        }
+
+        UpdateCategorySelection();
+        OnPropertyChanged(nameof(IsCategoryFiltered));
+        OnPropertyChanged(nameof(CategoryBarVisibility));
+    }
+
+    private void UpdateCategorySelection()
+    {
+        foreach (var option in CategoryOptions)
+        {
+            option.IsSelected = option.FilterValue == _selectedCategory;
+        }
     }
 }

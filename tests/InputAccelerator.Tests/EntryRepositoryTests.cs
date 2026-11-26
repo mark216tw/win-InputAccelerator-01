@@ -17,6 +17,73 @@ public sealed class EntryRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task SaveAndLoad_RoundTripsCategory()
+    {
+        var repository = new EntryRepository(_filePath);
+
+        await repository.SaveAsync(
+        [
+            new TextEntry { Content = "未分類", Category = 0 },
+            new TextEntry { Content = "分類九", Category = 9 },
+        ]);
+
+        var loaded = await repository.LoadAsync();
+
+        Assert.Equal(2, loaded.Count);
+        Assert.Equal(0, loaded[0].Category);
+        Assert.Equal(9, loaded[1].Category);
+    }
+
+    [Fact]
+    public async Task Load_LegacyEntryWithoutCategory_UsesDefault()
+    {
+        await File.WriteAllTextAsync(
+            _filePath,
+            $$"""
+            [
+              { "id": "{{Guid.NewGuid()}}", "content": "舊版項目" }
+            ]
+            """);
+        var repository = new EntryRepository(_filePath);
+
+        var loaded = await repository.LoadAsync();
+
+        var entry = Assert.Single(loaded);
+        Assert.Equal(EntryCategories.Default, entry.Category);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(10)]
+    public async Task Load_WhenCategoryInvalid_NormalizesToDefault(int category)
+    {
+        await File.WriteAllTextAsync(
+            _filePath,
+            $$"""
+            [
+              { "id": "{{Guid.NewGuid()}}", "content": "分類錯誤", "category": {{category}} }
+            ]
+            """);
+        var repository = new EntryRepository(_filePath);
+
+        var loaded = await repository.LoadAsync();
+
+        var entry = Assert.Single(loaded);
+        Assert.Equal(EntryCategories.Default, entry.Category);
+    }
+
+    [Fact]
+    public async Task Save_WritesCategoryAsNumber()
+    {
+        var repository = new EntryRepository(_filePath);
+
+        await repository.SaveAsync([new TextEntry { Content = "分類三", Category = 3 }]);
+
+        var json = await File.ReadAllTextAsync(_filePath);
+        Assert.Contains("\"category\": 3", json);
+    }
+
+    [Fact]
     public async Task SaveAndLoad_RoundTripsEntriesInOrder()
     {
         var repository = new EntryRepository(_filePath);
@@ -220,13 +287,14 @@ public sealed class EntryRepositoryTests : IDisposable
         await repository.ExportToFileAsync(
             exportPath,
             [
-                new TextEntry { Id = textId, Content = "匯出文字" },
+                new TextEntry { Id = textId, Content = "匯出文字", Category = 4 },
                 new TextEntry
                 {
                     Id = hotkeyId,
                     Kind = EntryKind.Hotkey,
                     Hotkey = "control+shift+c",
                     Label = "  複製  ",
+                    Category = 8,
                 },
             ]);
 
@@ -236,9 +304,11 @@ public sealed class EntryRepositoryTests : IDisposable
         Assert.Equal(2, result.Entries.Count);
         Assert.Equal(textId, result.Entries[0].Id);
         Assert.Equal("匯出文字", result.Entries[0].Content);
+        Assert.Equal(4, result.Entries[0].Category);
         Assert.Equal(hotkeyId, result.Entries[1].Id);
         Assert.Equal("Ctrl+Shift+C", result.Entries[1].Hotkey);
         Assert.Equal("複製", result.Entries[1].Label);
+        Assert.Equal(8, result.Entries[1].Category);
         Assert.False(File.Exists(exportPath + ".tmp"));
     }
 

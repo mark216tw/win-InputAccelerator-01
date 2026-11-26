@@ -7,6 +7,8 @@ namespace InputAccelerator.ViewModels;
 
 public sealed partial class TextEntryViewModel : ObservableObject
 {
+    private int _category;
+
     public TextEntryViewModel(TextEntry entry)
     {
         ArgumentNullException.ThrowIfNull(entry);
@@ -15,6 +17,7 @@ public sealed partial class TextEntryViewModel : ObservableObject
         Content = entry.Content;
         Hotkey = entry.Hotkey;
         Label = entry.Label;
+        Category = entry.Category;
     }
 
     public TextEntryViewModel(Guid id, string content)
@@ -50,7 +53,28 @@ public sealed partial class TextEntryViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(ToolTipText))]
     public partial string? Label { get; set; }
 
+    public int Category
+    {
+        get => _category;
+        set
+        {
+            var normalized = EntryCategories.Normalize(value);
+            if (!SetProperty(ref _category, normalized))
+            {
+                return;
+            }
+
+            OnPropertyChanged(nameof(CategoryText));
+            OnPropertyChanged(nameof(CategoryBadgeVisibility));
+        }
+    }
+
     public Guid Id { get; }
+
+    public string CategoryText => Category.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    public Visibility CategoryBadgeVisibility =>
+        Category == EntryCategories.Default ? Visibility.Collapsed : Visibility.Visible;
 
     public bool IsHotkey => Kind == EntryKind.Hotkey;
 
@@ -77,6 +101,7 @@ public sealed partial class TextEntryViewModel : ObservableObject
             Content = Kind == EntryKind.Text ? Content : string.Empty,
             Hotkey = Kind == EntryKind.Hotkey ? Hotkey : null,
             Label = Kind == EntryKind.Hotkey ? Label : null,
+            Category = Category,
         };
     }
 }

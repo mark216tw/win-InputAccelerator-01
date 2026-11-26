@@ -182,6 +182,7 @@ public sealed class EntryRepository
                     Kind = EntryKind.Hotkey,
                     Hotkey = HotkeyParser.Format(sequence),
                     Label = label,
+                    Category = EntryCategories.Normalize(entry.Category),
                 });
                 continue;
             }
@@ -198,6 +199,7 @@ public sealed class EntryRepository
                 Id = textId,
                 Kind = EntryKind.Text,
                 Content = entry.Content,
+                Category = EntryCategories.Normalize(entry.Category),
             });
         }
 

@@ -10,13 +10,20 @@ public sealed partial class EditEntryDialog : ContentDialog
 {
     private bool _isSyncingHotkey;
 
-    public EditEntryDialog(string title, EntryKind kind, string content, string? hotkey, string? label)
+    public EditEntryDialog(
+        string title,
+        EntryKind kind,
+        int category,
+        string content,
+        string? hotkey,
+        string? label)
     {
         InitializeComponent();
         Title = title;
         PrimaryButtonText = Strings.Get("EditEntryDialog.PrimaryButtonText", "儲存");
         CloseButtonText = Strings.Get("EditEntryDialog.CloseButtonText", "取消");
         KindSelector.SelectedIndex = kind == EntryKind.Hotkey ? 1 : 0;
+        CategorySelector.SelectedIndex = EntryCategories.Normalize(category);
         ContentBox.Text = content;
         LabelBox.Text = label ?? string.Empty;
         Recorder.SetHotkey(hotkey);
@@ -29,6 +36,9 @@ public sealed partial class EditEntryDialog : ContentDialog
     }
 
     public EntryKind SelectedKind => KindSelector.SelectedIndex == 1 ? EntryKind.Hotkey : EntryKind.Text;
+
+    public int SelectedCategory =>
+        CategorySelector.SelectedIndex < 0 ? EntryCategories.Default : CategorySelector.SelectedIndex;
 
     public string EntryText => ContentBox.Text;
 

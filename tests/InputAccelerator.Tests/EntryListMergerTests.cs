@@ -65,6 +65,7 @@ public sealed class EntryListMergerTests
                     Hotkey = "Alt+H, W",
                     Label = "序列",
                     Content = "應忽略",
+                    Category = 6,
                 },
             ]);
 
@@ -72,5 +73,17 @@ public sealed class EntryListMergerTests
         Assert.Equal(EntryKind.Hotkey, entry.Kind);
         Assert.Equal("Alt+H, W", entry.Hotkey);
         Assert.Equal("序列", entry.Label);
+        Assert.Equal(6, entry.Category);
+    }
+
+    [Fact]
+    public void Merge_NormalizesInvalidCategory()
+    {
+        var merged = EntryListMerger.Merge(
+            [],
+            [new TextEntry { Content = "分類錯誤", Category = 99 }]);
+
+        var entry = Assert.Single(merged);
+        Assert.Equal(EntryCategories.Default, entry.Category);
     }
 }

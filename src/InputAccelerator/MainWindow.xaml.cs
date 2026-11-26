@@ -44,6 +44,7 @@ public sealed partial class MainWindow : Window
         _memoryTrim = memoryTrim;
         _logger = logger;
         ViewModel.Entries.Entries.CollectionChanged += OnEntriesCollectionChanged;
+        ViewModel.Entries.VisibleEntries.CollectionChanged += OnVisibleEntriesChanged;
         ViewModel.Entries.BatchUpdateCompleted += OnEntriesBatchUpdateCompleted;
         UpdateEmptyState();
 
@@ -79,11 +80,17 @@ public sealed partial class MainWindow : Window
         UpdateEmptyState();
     }
 
+    private void OnVisibleEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        UpdateEmptyState();
+    }
+
     private void OnClosed(object sender, WindowEventArgs args)
     {
         CloseSettingsIfOpen();
         _appearance.Changed -= OnAppearanceChanged;
         ViewModel.Entries.Entries.CollectionChanged -= OnEntriesCollectionChanged;
+        ViewModel.Entries.VisibleEntries.CollectionChanged -= OnVisibleEntriesChanged;
         ViewModel.Entries.BatchUpdateCompleted -= OnEntriesBatchUpdateCompleted;
         Closed -= OnClosed;
         _minimumSizeInterop.Dispose();
@@ -193,9 +200,13 @@ public sealed partial class MainWindow : Window
     {
         try
         {
+            var defaultCategory = ViewModel.Entries.CategoryFilter == EntryCategories.AllFilter
+                ? EntryCategories.Default
+                : ViewModel.Entries.CategoryFilter;
             var dialog = new EditEntryDialog(
                 Strings.Get("EditEntryDialog.AddTitle", "新增項目"),
                 EntryKind.Text,
+                defaultCategory,
                 string.Empty,
                 hotkey: null,
                 label: null)
@@ -210,7 +221,8 @@ public sealed partial class MainWindow : Window
                     dialog.SelectedKind,
                     dialog.EntryText,
                     dialog.EntryHotkey,
-                    dialog.EntryLabel);
+                    dialog.EntryLabel,
+                    dialog.SelectedCategory);
                 EntryList.ScrollIntoView(entry);
             }
         }
@@ -322,7 +334,7 @@ public sealed partial class MainWindow : Window
             var picker = new FileSavePicker(AppWindow.Id)
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-                SuggestedFileName = "input-accelerator-entries",
+                SuggestedFileName = $"input-accelerator-entries-{DateTime.Now.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture)}",
                 DefaultFileExtension = ".json",
                 CommitButtonText = Strings.Get("ExportPickerCommitButtonText", "匯出"),
             };
@@ -392,6 +404,7 @@ public sealed partial class MainWindow : Window
             var dialog = new EditEntryDialog(
                 Strings.Get("EditEntryDialog.EditTitle", "編輯項目"),
                 selected.Kind,
+                selected.Category,
                 selected.Content,
                 selected.Hotkey,
                 selected.Label)
@@ -407,7 +420,8 @@ public sealed partial class MainWindow : Window
                     dialog.SelectedKind,
                     dialog.EntryText,
                     dialog.EntryHotkey,
-                    dialog.EntryLabel);
+                    dialog.EntryLabel,
+                    dialog.SelectedCategory);
             }
         }
         catch (Exception ex)
@@ -474,6 +488,25 @@ public sealed partial class MainWindow : Window
 
     private void UpdateEmptyState()
     {
-        EmptyStatePanel.Visibility = ViewModel.Entries.HasEntries ? Visibility.Collapsed : Visibility.Visible;
+        var hasVisibleEntries = ViewModel.Entries.VisibleEntries.Count > 0;
+        EmptyStatePanel.Visibility = hasVisibleEntries ? Visibility.Collapsed : Visibility.Visible;
+        if (hasVisibleEntries)
+        {
+            return;
+        }
+
+        if (ViewModel.Entries.CategoryFilter == EntryCategories.AllFilter)
+        {
+            EmptyStateTitle.Text = Strings.Get("EmptyTitle.Text", "尚未新增項目");
+            EmptyStateDescription.Text = Strings.Get(
+                "EmptyDescription.Text",
+                "點選「新增」建立第一組常用文字或按鍵組合。");
+            return;
+        }
+
+        EmptyStateTitle.Text = Strings.Get("EmptyCategoryTitle.Text", "此分類尚無項目");
+        EmptyStateDescription.Text = Strings.Get(
+            "EmptyCategoryDescription.Text",
+            "切換其他分類，或編輯項目的分類。");
     }
 }

@@ -11,4 +11,6 @@ public sealed class TextEntry
     public string? Hotkey { get; set; }
 
     public string? Label { get; set; }
+
+    public int Category { get; set; } = EntryCategories.Default;
 }

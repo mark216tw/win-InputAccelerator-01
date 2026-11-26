@@ -57,6 +57,7 @@ public sealed partial class FloatingWindow : Window
         _settings = settings;
         _logger = logger;
         ChipHost.ItemsSource = ViewModel.Items;
+        CategoryHost.ItemsSource = ViewModel.CategoryOptions;
         ViewModel.Items.CollectionChanged += OnItemsCollectionChanged;
         UpdateEmptyState();
         _interop = new FloatingWindowInterop();
@@ -306,6 +307,15 @@ public sealed partial class FloatingWindow : Window
         finally
         {
             _isSending = false;
+        }
+    }
+
+    private void OnCategoryClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: FloatingCategoryOptionViewModel option })
+        {
+            MarkActivity();
+            ViewModel.SelectCategory(option.FilterValue);
         }
     }
 
@@ -594,6 +604,15 @@ public sealed partial class FloatingWindow : Window
 
     private void UpdateEmptyState()
     {
-        EmptyStateText.Visibility = ViewModel.HasEntries ? Visibility.Collapsed : Visibility.Visible;
+        if (ViewModel.HasEntries)
+        {
+            EmptyStateText.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        EmptyStateText.Text = ViewModel.IsCategoryFiltered
+            ? Strings.Get("FloatingEmptyCategory", "此分類尚無項目")
+            : Strings.Get("FloatingEmpty", "尚無項目");
+        EmptyStateText.Visibility = Visibility.Visible;
     }
 }

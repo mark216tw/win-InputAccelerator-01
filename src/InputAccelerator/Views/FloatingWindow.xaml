@@ -20,6 +20,7 @@
                 <Grid x:Name="ExpandedView">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="22" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
@@ -75,7 +76,38 @@
                         </Button>
                     </Grid>
 
-                    <Grid Grid.Row="1">
+                    <ItemsControl
+                        x:Name="CategoryHost"
+                        Grid.Row="1"
+                        Margin="6,0,6,2"
+                        Visibility="{x:Bind ViewModel.CategoryBarVisibility, Mode=OneWay}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <helpers:WrapPanel HorizontalSpacing="4" VerticalSpacing="2" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:FloatingCategoryOptionViewModel">
+                                <Button
+                                    MinWidth="0"
+                                    Padding="6,1"
+                                    AutomationProperties.Name="{x:Bind Label}"
+                                    Background="{x:Bind Background, Mode=OneWay}"
+                                    BorderBrush="{x:Bind BorderBrush, Mode=OneWay}"
+                                    Click="OnCategoryClick"
+                                    CornerRadius="8"
+                                    Style="{StaticResource FloatingChipButtonStyle}"
+                                    ToolTipService.ToolTip="{x:Bind Label}">
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{x:Bind Foreground, Mode=OneWay}"
+                                        Text="{x:Bind Label}" />
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Grid Grid.Row="2">
                         <ScrollViewer
                             Padding="6,0,6,4"
                             HorizontalScrollBarVisibility="Disabled"

@@ -78,7 +78,7 @@ public sealed class AppCoordinator
         _tray.Initialize();
         _tray.SetOverlayState(_settings.Current.IsOverlayEnabled);
 
-        _mainViewModel.SelectedEntry = _entryList.Entries.FirstOrDefault();
+        _mainViewModel.SelectedEntry = _entryList.VisibleEntries.FirstOrDefault();
         ShowMainWindow();
 
         if (_settings.Current.IsOverlayEnabled)

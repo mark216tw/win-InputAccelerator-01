@@ -7,11 +7,12 @@ using Microsoft.Extensions.Logging;
 
 namespace InputAccelerator.ViewModels;
 
-public sealed class EntryListViewModel : ObservableObject
+public sealed partial class EntryListViewModel : ObservableObject
 {
     private readonly EntryRepository _repository;
     private readonly ILogger<EntryListViewModel> _logger;
     private readonly SemaphoreSlim _persistenceGate = new(1, 1);
+    private int _categoryFilter = EntryCategories.AllFilter;
     private bool _suppressPersistence;
 
     public EntryListViewModel(EntryRepository repository, ILogger<EntryListViewModel> logger)
@@ -23,11 +24,45 @@ public sealed class EntryListViewModel : ObservableObject
 
     public ObservableCollection<TextEntryViewModel> Entries { get; } = [];
 
+    public ObservableCollection<TextEntryViewModel> VisibleEntries { get; } = [];
+
+    public int CategoryFilter
+    {
+        get => _categoryFilter;
+        set
+        {
+            var normalized = EntryCategories.NormalizeFilter(value);
+            if (_categoryFilter == normalized)
+            {
+                return;
+            }
+
+            _categoryFilter = normalized;
+            RefreshVisibleEntries();
+            OnPropertyChanged(nameof(CategoryFilter));
+        }
+    }
+
     public bool HasEntries => Entries.Count > 0;
+
+    public bool HasVisibleEntries => VisibleEntries.Count > 0;
 
     public bool IsBatchUpdating { get; private set; }
 
     public event EventHandler? BatchUpdateCompleted;
+
+    public event EventHandler? CategoryCountsChanged;
+
+    public int GetCategoryCount(int category)
+    {
+        if (category == EntryCategories.AllFilter)
+        {
+            return Entries.Count;
+        }
+
+        var normalized = EntryCategories.Normalize(category);
+        return Entries.Count(entry => entry.Category == normalized);
+    }
 
     public void Load(IEnumerable<TextEntry> entries)
     {
@@ -47,29 +82,45 @@ public sealed class EntryListViewModel : ObservableObject
             _suppressPersistence = false;
         }
 
+        RefreshVisibleEntries();
         OnPropertyChanged(nameof(HasEntries));
+        RaiseCategoryCountsChanged();
         BatchUpdateCompleted?.Invoke(this, EventArgs.Empty);
     }
 
-    public TextEntryViewModel Add(EntryKind kind, string content, string? hotkey, string? label)
+    public TextEntryViewModel Add(
+        EntryKind kind,
+        string content,
+        string? hotkey,
+        string? label,
+        int category)
     {
         var entry = new TextEntryViewModel(Guid.NewGuid(), content)
         {
             Kind = kind,
             Hotkey = hotkey,
             Label = label,
+            Category = category,
         };
         Entries.Add(entry);
         return entry;
     }
 
-    public void Update(TextEntryViewModel entry, EntryKind kind, string content, string? hotkey, string? label)
+    public void Update(
+        TextEntryViewModel entry,
+        EntryKind kind,
+        string content,
+        string? hotkey,
+        string? label,
+        int category)
     {
         ArgumentNullException.ThrowIfNull(entry);
+        var normalizedCategory = EntryCategories.Normalize(category);
         if (entry.Kind == kind &&
             string.Equals(entry.Content, content, StringComparison.Ordinal) &&
             string.Equals(entry.Hotkey, hotkey, StringComparison.Ordinal) &&
-            string.Equals(entry.Label, label, StringComparison.Ordinal))
+            string.Equals(entry.Label, label, StringComparison.Ordinal) &&
+            entry.Category == normalizedCategory)
         {
             return;
         }
@@ -78,6 +129,9 @@ public sealed class EntryListViewModel : ObservableObject
         entry.Content = content;
         entry.Hotkey = hotkey;
         entry.Label = label;
+        entry.Category = normalizedCategory;
+        RefreshVisibleEntries();
+        RaiseCategoryCountsChanged();
         QueuePersistence();
     }
 
@@ -94,9 +148,9 @@ public sealed class EntryListViewModel : ObservableObject
             return false;
         }
 
-        var currentIndex = Entries.IndexOf(entry);
+        var currentIndex = VisibleEntries.IndexOf(entry);
         var targetIndex = currentIndex + offset;
-        return currentIndex >= 0 && targetIndex >= 0 && targetIndex < Entries.Count;
+        return currentIndex >= 0 && targetIndex >= 0 && targetIndex < VisibleEntries.Count;
     }
 
     public void Move(TextEntryViewModel entry, int offset)
@@ -107,8 +161,16 @@ public sealed class EntryListViewModel : ObservableObject
             return;
         }
 
+        var visibleIndex = VisibleEntries.IndexOf(entry);
+        var target = VisibleEntries[visibleIndex + offset];
         var currentIndex = Entries.IndexOf(entry);
-        Entries.Move(currentIndex, currentIndex + offset);
+        var targetIndex = Entries.IndexOf(target);
+        if (currentIndex < 0 || targetIndex < 0)
+        {
+            return;
+        }
+
+        Entries.Move(currentIndex, targetIndex);
     }
 
     public Task SaveNowAsync(CancellationToken cancellationToken = default)
@@ -145,7 +207,9 @@ public sealed class EntryListViewModel : ObservableObject
             _suppressPersistence = false;
         }
 
+        RefreshVisibleEntries();
         OnPropertyChanged(nameof(HasEntries));
+        RaiseCategoryCountsChanged();
         BatchUpdateCompleted?.Invoke(this, EventArgs.Empty);
         await SaveNowAsync(cancellationToken);
 
@@ -172,11 +236,32 @@ public sealed class EntryListViewModel : ObservableObject
             return;
         }
 
+        RefreshVisibleEntries();
         OnPropertyChanged(nameof(HasEntries));
+        RaiseCategoryCountsChanged();
         if (!_suppressPersistence)
         {
             QueuePersistence();
         }
+    }
+
+    private void RaiseCategoryCountsChanged()
+    {
+        CategoryCountsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void RefreshVisibleEntries()
+    {
+        VisibleEntries.Clear();
+        foreach (var entry in Entries)
+        {
+            if (CategoryFilter == EntryCategories.AllFilter || entry.Category == CategoryFilter)
+            {
+                VisibleEntries.Add(entry);
+            }
+        }
+
+        OnPropertyChanged(nameof(HasVisibleEntries));
     }
 
     private void QueuePersistence()

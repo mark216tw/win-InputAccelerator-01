@@ -4,6 +4,69 @@
 
 ---
 
+## 2026-11-26 - v1.8.2
+
+### 目標
+調整主視窗分類下拉選單的數量格式，並讓匯出的預設檔名帶有日期時間，避免重複匯出時覆蓋或難以辨識。
+
+### 變更
+- `Strings/zh-Hant/Resources.resw`、`MainViewModel`：`CategoryFilterCountFormat` 改為 `{0} ({1})`，顯示為 `1 (5)`。
+- `MainWindow.OnExportClick`：`SuggestedFileName` 加上 `yyyyMMdd-HHmmss` 日期時間。
+
+### 問題與解法
+- 檔名時間以 `CultureInfo.InvariantCulture` 格式化，避免不同地區設定產生非預期字元。
+
+### 待辦
+- 尚未實機確認檔案選擇器對含時間戳記檔名的顯示。
+
+---
+
+## 2026-11-26 - v1.8.1
+
+### 目標
+調整分類篩選的呈現與記憶行為：主視窗標題改為「分類」並顯示各分類數量、啟動預設全部；浮動視窗移除「全部」並只顯示有項目的分類。
+
+### 變更
+- `MainWindow`：分類標題「分類」移到下拉選單左側，下拉選項改為動態綁定 `CategoryFilterOptions`，`0`–`9` 顯示 `分類(數量)`，`全部` 不顯示數量。
+- 新增 `CategoryFilterOptionViewModel`；`MainViewModel` 監聽分類數量變化並即時更新選項文字。
+- `EntryListViewModel` 新增 `CategoryCountsChanged` 與 `GetCategoryCount`，於載入、匯入、新增、刪除與編輯分類後通知。
+- 移除主視窗與浮動視窗的分類篩選持久化；`AppSettings`、`SettingsService`、`SettingsStore` 移除 `MainCategoryFilter`、`FloatingCategoryFilter`。
+- `FloatingBarViewModel`：移除「全部」選項，只建立有項目的分類並自動選取第一個；選取分類歸零時改選第一個非零分類；分類選項 ≤ 1 時隱藏分類列。
+- `FloatingWindow` 分類列 Visibility 綁定 `CategoryBarVisibility`；更新分類相關字串與 `SettingsStoreTests`。
+
+### 問題與解法
+- 浮動視窗分類列原本固定顯示 11 個選項且會記住選擇，與新需求衝突；改為每次依目前項目重建選項，並在重建時校正選取分類。
+- 主視窗下拉選項原為 XAML 固定項目，無法顯示數量；改以 ViewModel 集合搭配 `DisplayMemberPath` 動態更新。
+
+### 待辦
+- 尚未實機驗證分類數量在大量項目與窄視窗下的顯示效果。
+- 尚未在 Windows 10 1809 實機驗證。
+
+---
+
+## 2026-11-26 - v1.8.0
+
+### 目標
+新增固定 0–9 的項目分類，讓編輯項目可選擇分類，並在浮動視窗提供精簡的快速分類切換。
+
+### 變更
+- Core：新增 `EntryCategories`（0–9、預設 0、篩選 -1 代表全部）；`TextEntry` 加入 `Category`；`EntryRepository`、`EntryListMerger` 保存並正規化分類。
+- `AppSettings` 新增 `FloatingCategoryFilter`、`MainCategoryFilter`（-1 為全部），`SettingsStore` 載入時驗證非法值。
+- `EntryListViewModel` 新增 `VisibleEntries` 與 `CategoryFilter`；上移／下移改以目前可見清單為準。
+- `MainViewModel` 新增主視窗篩選、分類持久化與篩選後的選取維持；`FloatingBarViewModel` 新增 11 個分類選項、獨立篩選與持久化。
+- `EditEntryDialog` 新增分類 ComboBox；`MainWindow` 新增分類篩選與 1–9 分類標記；`FloatingWindow` 在拖曳列與項目之間新增可換行分類列。
+- 新增分類相關字串、單元測試，更新 README、使用指南、CHANGELOG、RELEASE_NOTES，版本提升至 1.8.0。
+
+### 問題與解法
+- `VisibleEntries` 重建時會讓 ListView 暫時失去選取；在新增、編輯、刪除、移動與切換篩選後重新指定選取項目。
+- 浮動視窗分類按鈕需跟隨背景色使用對比色；以 `FloatingCategoryOptionViewModel` 依目前 `FloatingPalette` 計算選取／未選取筆刷。
+
+### 待辦
+- 尚未實機驗證分類列在窄視窗、多列換行與高 DPI 下的視覺效果。
+- 尚未在 Windows 10 1809 實機驗證。
+
+---
+
 ## 2026-11-22 - v1.7.0
 
 ### 目標

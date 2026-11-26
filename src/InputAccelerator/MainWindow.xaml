@@ -62,6 +62,16 @@
                     Grid.Column="1"
                     Orientation="Horizontal"
                     Spacing="8">
+                    <TextBlock
+                        x:Uid="CategoryFilterLabel"
+                        VerticalAlignment="Center" />
+                    <ComboBox
+                        x:Uid="CategoryFilterCombo"
+                        MinWidth="120"
+                        VerticalAlignment="Center"
+                        DisplayMemberPath="Label"
+                        ItemsSource="{x:Bind ViewModel.CategoryFilterOptions, Mode=OneWay}"
+                        SelectedIndex="{x:Bind ViewModel.CategoryFilterIndex, Mode=TwoWay}" />
                     <Button
                         x:Uid="AddButton"
                         Click="OnAddClick"
@@ -87,7 +97,7 @@
                         Background="Transparent"
                         BorderThickness="0"
                         DoubleTapped="OnEntryListDoubleTapped"
-                        ItemsSource="{x:Bind ViewModel.Entries.Entries, Mode=OneWay}"
+                        ItemsSource="{x:Bind ViewModel.Entries.VisibleEntries, Mode=OneWay}"
                         SelectedItem="{x:Bind ViewModel.SelectedEntry, Mode=TwoWay}"
                         SelectionMode="Single">
                         <ListView.ItemContainerStyle>
@@ -106,12 +116,30 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <FontIcon
+                                    <StackPanel
                                         VerticalAlignment="Top"
-                                        FontSize="14"
-                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                        Glyph="&#xE765;"
-                                        Visibility="{x:Bind HotkeyVisibility, Mode=OneWay}" />
+                                        Orientation="Horizontal"
+                                        Spacing="6">
+                                        <Border
+                                            MinWidth="18"
+                                            Height="18"
+                                            Background="{ThemeResource ControlAltFillColorTertiaryBrush}"
+                                            CornerRadius="4"
+                                            Visibility="{x:Bind CategoryBadgeVisibility, Mode=OneWay}">
+                                            <TextBlock
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                FontSize="10"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                Text="{x:Bind CategoryText, Mode=OneWay}" />
+                                        </Border>
+                                        <FontIcon
+                                            VerticalAlignment="Center"
+                                            FontSize="14"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                            Glyph="&#xE765;"
+                                            Visibility="{x:Bind HotkeyVisibility, Mode=OneWay}" />
+                                    </StackPanel>
                                     <TextBlock
                                         Grid.Column="1"
                                         MaxLines="3"
@@ -131,10 +159,12 @@
                         IsHitTestVisible="False"
                         Spacing="4">
                         <TextBlock
+                            x:Name="EmptyStateTitle"
                             x:Uid="EmptyTitle"
                             HorizontalAlignment="Center"
                             Style="{StaticResource BodyStrongTextBlockStyle}" />
                         <TextBlock
+                            x:Name="EmptyStateDescription"
                             x:Uid="EmptyDescription"
                             HorizontalAlignment="Center"
                             Style="{StaticResource HintTextStyle}" />

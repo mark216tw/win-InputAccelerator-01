@@ -287,6 +287,7 @@ TextEntry
   Content: string（文字項目內容）
   Hotkey: string?（按鍵組合項目，例如 Ctrl+C 或 Alt+H, W）
   Label: string?（按鍵組合項目名稱）
+  Category: int（0–9，預設 0）
 
 AppSettings
   IsOverlayEnabled: bool
@@ -311,6 +312,7 @@ DisplayAreaInfo
 - 按鍵組合項目必須有可解析的 `Hotkey`，儲存時轉為正規化字串；多步驟以逗號分隔，最多 8 步，無效項目會被跳過。
 - 按鍵組合可透過錄製或文字輸入建立；任一步含 `Win` 修飾鍵時視為系統快捷鍵，送出時不要求外部目標視窗。
 - 按鍵組合的 `Label` 會去除前後空白，空白視為未命名。
+- `TextEntry.Category` 固定為 `0`–`9`；缺少或非法值在載入時正規化為 `0`。
 - `TextEntry.Id` 為空或重複時重新產生 GUID。
 - 匯入檔必須是 JSON 陣列；無效文字或按鍵組合會略過，附加模式遇到重複 GUID 會重新配發。
 - 取代目前清單前必須由使用者明確選擇，避免誤刪。

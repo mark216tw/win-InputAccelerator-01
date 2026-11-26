@@ -43,6 +43,7 @@ public static class EntryListMerger
             Content = source.Content,
             Hotkey = source.Hotkey,
             Label = source.Label,
+            Category = EntryCategories.Normalize(source.Category),
         };
     }
 }

@@ -113,8 +113,8 @@ InputAccelerator.slnx
 
 | 檔案 | 責任 |
 | --- | --- |
-| `MainWindow.xaml(.cs)` | 主視窗、項目清單、新增／編輯／刪除／排序、JSON 匯入／匯出、More 按鈕、縮到系統匣 |
-| `FloatingWindow.xaml(.cs)` | 無邊框置頂浮動視窗、膠囊清單、開啟主視窗、拖曳、調整大小、收合／還原 |
+| `MainWindow.xaml(.cs)` | 主視窗、項目清單、分類篩選、新增／編輯／刪除／排序、JSON 匯入／匯出、More 按鈕、縮到系統匣 |
+| `FloatingWindow.xaml(.cs)` | 無邊框置頂浮動視窗、分類列、膠囊清單、開啟主視窗、拖曳、調整大小、收合／還原 |
 | `SettingsWindow.xaml(.cs)` | 顯示模式與浮動視窗背景設定，非模態 singleton 視窗 |
 | `EditEntryDialog.xaml(.cs)` | 新增／編輯文字或按鍵組合的 `ContentDialog` |
 | `HotkeyRecorder.xaml(.cs)` | 多步驟按鍵序列錄製控制項，讀取修飾鍵狀態、累積步驟並在閒置後完成 |
@@ -123,11 +123,13 @@ InputAccelerator.slnx
 
 | 檔案 | 責任 |
 | --- | --- |
-| `EntryListViewModel` | 項目清單集合、新增／更新／刪除／移動、匯入／匯出與儲存協調 |
-| `MainViewModel` | 主視窗設定狀態、輸入模式、主題、背景選項、版本文字 |
-| `FloatingBarViewModel` | 將項目清單轉為浮動視窗膠囊，依類型呼叫文字或按鍵組合輸入服務 |
+| `EntryListViewModel` | 項目清單集合、分類篩選與可見集合、新增／更新／刪除／移動、匯入／匯出與儲存協調 |
+| `MainViewModel` | 主視窗狀態、分類篩選選項與項目數量、版本文字 |
+| `FloatingBarViewModel` | 將項目清單轉為浮動視窗膠囊，只顯示有項目的分類並自動選取第一個 |
 | `FloatingEntryItemViewModel` | 單一膠囊項目的顯示文字、預覽與配色 |
-| `TextEntryViewModel` | 單筆文字或按鍵組合的可觀察包裝 |
+| `FloatingCategoryOptionViewModel` | 浮動視窗分類選項的選取狀態與對比配色 |
+| `CategoryFilterOptionViewModel` | 主視窗分類下拉選項的顯示文字（含項目數量） |
+| `TextEntryViewModel` | 單筆文字或按鍵組合的可觀察包裝，含分類 |
 | `FloatingBackgroundOption` | 設定視窗背景色塊選項 |
 
 ### 4.3 Application Services
@@ -149,7 +151,8 @@ InputAccelerator.slnx
 | 服務 | 責任 |
 | --- | --- |
 | `EntryRepository` | 非同步載入／儲存項目清單，支援指定路徑匯入／匯出，使用暫存檔原子替換，損壞檔備份 |
-| `EntryListMerger` | 合併現有與匯入項目，保留順序並重新配發重複的 GUID |
+| `EntryListMerger` | 合併現有與匯入項目，保留順序、分類並重新配發重複的 GUID |
+| `EntryCategories` | 定義固定 `0`–`9` 分類、預設值與篩選值正規化 |
 | `SettingsStore` | 非同步載入／儲存設定，列舉與背景索引正規化 |
 | `TextEscape` | 將文字中的 `\n`、`\t` 轉為換行與 Tab |
 | `TextInputComposer` | 將文字拆解為 Unicode 字元與 Enter／Tab 虛擬鍵單元 |
@@ -301,24 +304,28 @@ FloatingWindow.OnEntryClick
   {
     "id": "3f2504e0-4f89-11d3-9a0c-0305e82c3301",
     "kind": "text",
-    "content": "常用文字內容"
+    "content": "常用文字內容",
+    "category": 0
   },
   {
     "id": "9c8b7a60-1f2e-4d3c-8b7a-605142536475",
     "kind": "hotkey",
     "label": "複製",
-    "hotkey": "Ctrl+C"
+    "hotkey": "Ctrl+C",
+    "category": 1
   },
   {
     "id": "4b3a2918-0e7d-4c6f-9a51-2d8c7b6e5f40",
     "kind": "hotkey",
     "label": "功能區",
-    "hotkey": "Alt+H, W"
+    "hotkey": "Alt+H, W",
+    "category": 2
   }
 ]
 ```
 
 - 採 camelCase、縮排輸出；`kind` 以字串儲存，缺少時視為 `text`。
+- `category` 為 `0`–`9` 的整數，缺少或超出範圍時載入為 `0`。
 - 使用寬鬆 JSON 編碼，中文與 `+`、`,` 等字元保持可讀。
 - 載入時忽略空白文字與無效按鍵組合，修正重複或空的 GUID。
 - 按鍵組合會轉為正規化格式（例如 `control+escape` → `Ctrl+Esc`、`alt+h, w` → `Alt+H, W`）。
