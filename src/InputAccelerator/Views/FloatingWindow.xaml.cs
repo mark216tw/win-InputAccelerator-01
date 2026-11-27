@@ -191,7 +191,7 @@ public sealed partial class FloatingWindow : Window
         RootGrid.Background = palette.WindowBackground;
         WindowBorder.Background = palette.WindowBackground;
         WindowBorder.BorderBrush = palette.WindowBorder;
-        DragIndicator.Background = palette.MutedForeground;
+        DragIndicator.Foreground = palette.MutedForeground;
         ResizeGripPath.Stroke = palette.MutedForeground;
         EmptyStateText.Foreground = palette.Foreground;
         CollapseIcon.Foreground = palette.MutedForeground;

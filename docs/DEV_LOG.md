@@ -4,6 +4,44 @@
 
 ---
 
+## 2026-11-27 - v1.8.4
+
+### 目標
+讓浮動視窗的拖曳把手意圖更清楚，改用 Move（四向箭頭）圖示取代原本的橫條。
+
+### 變更
+- `Views/FloatingWindow.xaml`：`DragIndicator` 由 24×3 圓角橫條 `Border` 改為 `FontIcon`，使用 Segoe Fluent Icons `&#xE7C2;`（Move），字級 10；`DragHandle` 透明點擊區維持 28×20。
+- `Views/FloatingWindow.xaml.cs`：外觀套用由 `DragIndicator.Background` 改為 `DragIndicator.Foreground`，確保自訂主題色即時反映。
+- `Directory.Build.props`：版本 1.8.3 → 1.8.4。
+
+### 問題與解法
+- `DragIndicator` 型別由 `Border` 變為 `FontIcon`，著色屬性須從 `Background` 改為 `Foreground`，否則主題色不會套用。
+
+### 待辦
+- 尚未實機確認各主題（淺色／深色、五款配色）下四向箭頭圖示的辨識度。
+
+---
+
+## 2026-11-26 - v1.8.3
+
+### 目標
+讓浮動視窗頂部配置更緊湊：拖曳把手移到縮小按鈕旁，分類按鈕預設與開啟主視窗按鈕同列，寬度不足時再整個下移一列。
+
+### 變更
+- 新增 `Core.Models.FloatingToolbarLayout`：判斷分類能否與左右按鈕同列。
+- 新增 `Helpers.FloatingToolbarPanel`：自訂 Panel，量測分類單列自然寬，決定同列或換行；同列時左靠左、右靠右、分類緊接左鈕，換行時分類獨占第二列並可自動換行。
+- `Views/FloatingWindow.xaml`：`ExpandedView` 改為 `Auto / *` 兩列；拖曳把手（透明 `Border` + 指示條）移到縮小按鈕左側，分類 `ItemsControl` 移入工具列 Panel。
+- `tests/FloatingToolbarLayoutTests`：新增同列/換行、間距、無分類與無限寬度測試。
+
+### 問題與解法
+- 拖曳把手維持原本 `Border` 與事件，只改變位置，避免改成 `Button` 後與指標捕捉衝突。
+- `WrapPanel` 以有限寬量測時會回傳可用寬而非內容寬，因此同列判斷先以無限寬取得分類自然寬，並在 Panel 內保存同列結果供排列使用。
+
+### 待辦
+- 尚未實機確認分類很多、視窗很窄時的換行視覺與拖曳手感。
+
+---
+
 ## 2026-11-26 - v1.8.2
 
 ### 目標

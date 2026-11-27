@@ -19,37 +19,19 @@
             <Grid>
                 <Grid x:Name="ExpandedView">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="22" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0">
-                        <Border
-                            x:Name="DragHandle"
-                            Background="Transparent"
-                            PointerCaptureLost="OnDragHandlePointerCaptureLost"
-                            PointerMoved="OnDragHandlePointerMoved"
-                            PointerPressed="OnDragHandlePointerPressed"
-                            PointerReleased="OnDragHandlePointerReleased">
-                            <Border
-                                x:Name="DragIndicator"
-                                Width="24"
-                                Height="3"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                Background="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
-                                CornerRadius="1.5"
-                                Opacity="0.6" />
-                        </Border>
-
+                    <helpers:FloatingToolbarPanel
+                        Grid.Row="0"
+                        Padding="4,1,4,1"
+                        HorizontalSpacing="4"
+                        VerticalSpacing="2">
                         <Button
                             x:Name="OpenMainButton"
                             Width="20"
                             Height="20"
-                            Margin="4,0,0,0"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Center"
                             Click="OnOpenMainClick"
                             Style="{StaticResource FloatingIconButtonStyle}">
                             <FontIcon
@@ -59,55 +41,75 @@
                                 Glyph="&#xE713;" />
                         </Button>
 
-                        <Button
-                            x:Name="CollapseButton"
-                            Width="20"
-                            Height="20"
-                            Margin="0,0,4,0"
-                            HorizontalAlignment="Right"
+                        <ItemsControl
+                            x:Name="CategoryHost"
                             VerticalAlignment="Center"
-                            Click="OnCollapseClick"
-                            Style="{StaticResource FloatingIconButtonStyle}">
-                            <FontIcon
-                                x:Name="CollapseIcon"
-                                FontSize="10"
-                                Foreground="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
-                                Glyph="&#xE921;" />
-                        </Button>
-                    </Grid>
+                            Visibility="{x:Bind ViewModel.CategoryBarVisibility, Mode=OneWay}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <helpers:WrapPanel HorizontalSpacing="4" VerticalSpacing="2" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:FloatingCategoryOptionViewModel">
+                                    <Button
+                                        MinWidth="0"
+                                        Padding="6,1"
+                                        AutomationProperties.Name="{x:Bind Label}"
+                                        Background="{x:Bind Background, Mode=OneWay}"
+                                        BorderBrush="{x:Bind BorderBrush, Mode=OneWay}"
+                                        Click="OnCategoryClick"
+                                        CornerRadius="8"
+                                        Style="{StaticResource FloatingChipButtonStyle}"
+                                        ToolTipService.ToolTip="{x:Bind Label}">
+                                        <TextBlock
+                                            FontSize="11"
+                                            Foreground="{x:Bind Foreground, Mode=OneWay}"
+                                            Text="{x:Bind Label}" />
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
 
-                    <ItemsControl
-                        x:Name="CategoryHost"
-                        Grid.Row="1"
-                        Margin="6,0,6,2"
-                        Visibility="{x:Bind ViewModel.CategoryBarVisibility, Mode=OneWay}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <helpers:WrapPanel HorizontalSpacing="4" VerticalSpacing="2" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:FloatingCategoryOptionViewModel">
-                                <Button
-                                    MinWidth="0"
-                                    Padding="6,1"
-                                    AutomationProperties.Name="{x:Bind Label}"
-                                    Background="{x:Bind Background, Mode=OneWay}"
-                                    BorderBrush="{x:Bind BorderBrush, Mode=OneWay}"
-                                    Click="OnCategoryClick"
-                                    CornerRadius="8"
-                                    Style="{StaticResource FloatingChipButtonStyle}"
-                                    ToolTipService.ToolTip="{x:Bind Label}">
-                                    <TextBlock
-                                        FontSize="11"
-                                        Foreground="{x:Bind Foreground, Mode=OneWay}"
-                                        Text="{x:Bind Label}" />
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                        <StackPanel
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="2">
+                            <Border
+                                x:Name="DragHandle"
+                                Width="28"
+                                Height="20"
+                                Background="Transparent"
+                                PointerCaptureLost="OnDragHandlePointerCaptureLost"
+                                PointerMoved="OnDragHandlePointerMoved"
+                                PointerPressed="OnDragHandlePointerPressed"
+                                PointerReleased="OnDragHandlePointerReleased">
+                                <FontIcon
+                                    x:Name="DragIndicator"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="10"
+                                    Foreground="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
+                                    Glyph="&#xE7C2;" />
+                            </Border>
 
-                    <Grid Grid.Row="2">
+                            <Button
+                                x:Name="CollapseButton"
+                                Width="20"
+                                Height="20"
+                                VerticalAlignment="Center"
+                                Click="OnCollapseClick"
+                                Style="{StaticResource FloatingIconButtonStyle}">
+                                <FontIcon
+                                    x:Name="CollapseIcon"
+                                    FontSize="10"
+                                    Foreground="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
+                                    Glyph="&#xE921;" />
+                            </Button>
+                        </StackPanel>
+                    </helpers:FloatingToolbarPanel>
+
+                    <Grid Grid.Row="1">
                         <ScrollViewer
                             Padding="6,0,6,4"
                             HorizontalScrollBarVisibility="Disabled"
